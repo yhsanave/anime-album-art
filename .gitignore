@@ -116,3 +116,4 @@ dmypy.json
 # Custom
 songlist.md
 token.json
+client.py
