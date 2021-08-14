@@ -5,7 +5,7 @@ A tool to help you manage your anime playlist
 ## Setup
 
 0. You will need both an AniList and a MyAnimeList account. Only the AniList account needs to have your list, the MAL account is only used to generate an api key. 
-You will also need (python)[https://www.python.org/] and `requests` (`pip install requests`) in order to run the program.
+You will also need [python](https://www.python.org/) and `requests` (`pip install requests`) in order to run the program.
 
 1. Go to https://myanimelist.net/apiconfig (login if needed) and click `Create ID`
 
