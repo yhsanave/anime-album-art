@@ -34,3 +34,5 @@ You will also need [python](https://www.python.org/) and `requests` (`pip instal
 4. Now just wait for it to finish getting the data from MAL. You can stop the program early by closing the window or pressing ctrl+c
 
 5. Once the program finishes, it will save your song list to `songlist.md`
+
+6. If you want the list as a `.csv`, run `parseMarkdown.py`
