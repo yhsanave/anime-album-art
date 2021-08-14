@@ -117,3 +117,4 @@ dmypy.json
 songlist.md
 token.json
 client.py
+songs.csv
