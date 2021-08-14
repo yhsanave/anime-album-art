@@ -1,0 +1,2 @@
+python animePlaylist.py
+pause .
