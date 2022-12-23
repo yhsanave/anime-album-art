@@ -2,9 +2,11 @@ import json
 import requests
 import secrets
 import anilist
+from rich.progress import Progress, TextColumn, BarColumn, MofNCompleteColumn, TimeRemainingColumn
 from time import sleep
-from sys import stdout
 from client import CLIENT_ID, CLIENT_SECRET
+import argparse
+
 
 # 1. Generate a new Code Verifier / Code Challenge.
 def get_new_code_verifier() -> str:
@@ -43,32 +45,19 @@ def generate_new_token(authorisation_code: str, code_verifier: str) -> dict:
     print('Token generated successfully!')
 
     with open('token.json', 'w') as file:
-        json.dump(token, file, indent = 4)
+        json.dump(token, file, indent=4)
         print('Token saved in "token.json"')
 
     return token
 
 
-# 4. Test the API by requesting your profile information
-def print_user_info(access_token: str):
-    url = 'https://api.myanimelist.net/v2/users/@me'
-    response = requests.get(url, headers = {
-        'Authorization': f'Bearer {access_token}'
-        })
-    
-    response.raise_for_status()
-    user = response.json()
-    response.close()
-
-    print(f"\n>>> Greetings {user['name']}! <<<")
-
 def getAnimeById(id: int, access_token: str):
     url = f'https://api.myanimelist.net/v2/anime/{id}'
-    response = requests.get(url, headers = {
+    response = requests.get(url, headers={
         'Authorization': f'Bearer {access_token}'
-        }, params= {
-            ('fields', 'title,opening_themes,ending_themes')
-        })
+    }, params={
+        ('fields', 'title,opening_themes,ending_themes')
+    })
 
     response.raise_for_status()
     anime = response.json()
@@ -76,25 +65,26 @@ def getAnimeById(id: int, access_token: str):
 
     return anime
 
-def makeList(malIds, token: str):
-    print(f"{len(malIds)} anime to collect. Lowest ID: {malIds[-1:]}")
+
+def makeList(malIds: list[int], token: str):
     animelist = []
 
-    for id in malIds:
-        sleep(.5)
-        stdout.write(f"\rGetting anime from MAL with ID: {id}")
-        stdout.flush()
-        animelist.append(getAnimeById(id, token))
+    with Progress(TextColumn("Getting anime from MAL: {task.fields[id]:<7}"), BarColumn(), MofNCompleteColumn(), TimeRemainingColumn()) as prog:
+        task = prog.add_task(description='Getting anime',
+                             total=len(malIds), id=0)
+
+        for id in malIds:
+            prog.update(task, advance=1, id=id)
+            animelist.append(getAnimeById(id, token))
+            sleep(.2)  # Try not to hit the MAL API rate limit which isn't documented anywhere >:(
 
     return animelist
 
-def sortFunc(anime):
-    return anime["title"]
 
 def writeToFile(animelist):
     with open("songlist.md", "w", encoding="utf-8") as file:
         file.write("# Anime Playist\n\n")
-        
+
         for anime in animelist:
             file.write(f'## {anime["title"]}\n\n')
 
@@ -110,7 +100,13 @@ def writeToFile(animelist):
 
             file.write("---\n\n")
 
+
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(prog='Anime Playlist')
+    parser.add_argument('-d', '--completed-date', dest='date', type=int, default=0,
+                        help='8 digit long date integer (YYYYMMDD). E.g. 2016: 20160000, May 1976: 19760500')
+    args = parser.parse_args()
+
     if CLIENT_ID == "YOUR_CLIENT_ID" or CLIENT_SECRET == "YOUR_CLIENT_SECRET":
         print("You must register a MAL application and save the client ID and secret in client.py!")
         print("Follow step 0 here: https://myanimelist.net/blog.php?eid=835707")
@@ -122,8 +118,7 @@ if __name__ == '__main__':
     authorisation_code = input('Copy-paste the Authorisation Code: ').strip()
     token = generate_new_token(authorisation_code, code_verifier)
 
-    animelist = makeList(anilist.getMalIds(), token['access_token'])
-    animelist.sort(key=sortFunc)
+    animelist = makeList(anilist.getMalIds(args.date), token['access_token'])
+    animelist.sort(key=lambda a: a['title'])
 
     writeToFile(animelist)
-

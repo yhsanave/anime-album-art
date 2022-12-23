@@ -1,3 +1,5 @@
+# Parse the markdown file and turn it into a csv 
+
 import re, csv
 
 indexPattern = re.compile(r'#R?\d*:?\s*')

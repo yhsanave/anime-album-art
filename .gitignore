@@ -113,8 +113,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# VS Code
+.vscode/
+
 # Custom
 songlist.md
 token.json
 client.py
 songs.csv
+art/
